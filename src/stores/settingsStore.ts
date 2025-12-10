@@ -125,6 +125,12 @@ const settingUpdaters: {
     commands.changeAppendTrailingSpaceSetting(value as boolean),
   experiments_enabled: (value) =>
     commands.changeExperimentsEnabledSetting(value as boolean),
+  ai_enhancement_enabled: (value) =>
+    commands.changeAiEnhancementEnabled(value as boolean),
+  ai_selected_model: (value) =>
+    commands.changeAiModel(value as string),
+  ai_features: (value) =>
+    commands.changeAiFeatures(value as any),
   log_level: (value) => commands.setLogLevel(value as any),
 };
 

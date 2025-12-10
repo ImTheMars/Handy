@@ -1,4 +1,5 @@
 mod actions;
+mod ai_toolkit;
 #[cfg(all(target_os = "macos", target_arch = "aarch64"))]
 mod apple_intelligence;
 mod audio_feedback;
@@ -18,6 +19,7 @@ use specta_typescript::{BigIntExportBehavior, Typescript};
 use tauri_specta::{collect_commands, Builder};
 
 use env_filter::Builder as EnvFilterBuilder;
+use managers::ai_enhancement::AiEnhancementManager;
 use managers::audio::AudioRecordingManager;
 use managers::history::HistoryManager;
 use managers::model::ModelManager;
@@ -118,6 +120,7 @@ fn initialize_core_logic(app_handle: &AppHandle) {
         TranscriptionManager::new(app_handle, model_manager.clone())
             .expect("Failed to initialize transcription manager"),
     );
+    let ai_manager = Arc::new(tokio::sync::Mutex::new(AiEnhancementManager::new()));
     let history_manager =
         Arc::new(HistoryManager::new(app_handle).expect("Failed to initialize history manager"));
 
@@ -126,6 +129,7 @@ fn initialize_core_logic(app_handle: &AppHandle) {
     app_handle.manage(model_manager.clone());
     app_handle.manage(transcription_manager.clone());
     app_handle.manage(history_manager.clone());
+    app_handle.manage(ai_manager.clone());
 
     // Initialize the shortcuts
     shortcut::init_shortcuts(app_handle);
@@ -303,6 +307,17 @@ pub fn run() {
         commands::history::update_history_limit,
         commands::history::update_recording_retention_period,
         helpers::clamshell::is_laptop,
+        commands::ai_enhancement::get_ai_system_info,
+        commands::ai_enhancement::get_recommended_ai_model,
+        commands::ai_enhancement::get_available_ai_models,
+        commands::ai_enhancement::check_ollama_available,
+        commands::ai_enhancement::list_ollama_models,
+        commands::ai_enhancement::pull_ollama_model,
+        commands::ai_enhancement::delete_ollama_model,
+        commands::ai_enhancement::test_ai_enhancement,
+        commands::ai_enhancement::change_ai_enhancement_enabled,
+        commands::ai_enhancement::change_ai_model,
+        commands::ai_enhancement::change_ai_features,
     ]);
 
     #[cfg(debug_assertions)] // <- Only export on non-release builds

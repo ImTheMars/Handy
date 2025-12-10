@@ -6,6 +6,33 @@ use std::collections::HashMap;
 use tauri::AppHandle;
 use tauri_plugin_store::StoreExt;
 
+#[derive(Serialize, Deserialize, Debug, Clone, Type)]
+pub struct AiFeatures {
+    #[serde(default = "default_true")]
+    pub punctuation_and_capitalization: bool,
+    #[serde(default = "default_true")]
+    pub remove_filler_words: bool,
+    #[serde(default = "default_true")]
+    pub normalize_numbers: bool,
+    #[serde(default = "default_true")]
+    pub fix_spelling: bool,
+}
+
+fn default_true() -> bool {
+    true
+}
+
+impl Default for AiFeatures {
+    fn default() -> Self {
+        Self {
+            punctuation_and_capitalization: true,
+            remove_filler_words: true,
+            normalize_numbers: true,
+            fix_spelling: true,
+        }
+    }
+}
+
 pub const APPLE_INTELLIGENCE_PROVIDER_ID: &str = "apple_intelligence";
 pub const APPLE_INTELLIGENCE_DEFAULT_MODEL_ID: &str = "Apple Intelligence";
 
@@ -294,6 +321,12 @@ pub struct AppSettings {
     pub experiments_enabled: bool,
     #[serde(default = "default_developer_mode")]
     pub developer_mode: bool,
+    #[serde(default)]
+    pub ai_enhancement_enabled: bool,
+    #[serde(default)]
+    pub ai_selected_model: Option<String>,
+    #[serde(default)]
+    pub ai_features: AiFeatures,
 }
 
 fn default_model() -> String {
@@ -570,6 +603,9 @@ pub fn get_default_settings() -> AppSettings {
         append_trailing_space: false,
         experiments_enabled: default_experiments_enabled(),
         developer_mode: default_developer_mode(),
+        ai_enhancement_enabled: false,
+        ai_selected_model: None,
+        ai_features: AiFeatures::default(),
     }
 }
 

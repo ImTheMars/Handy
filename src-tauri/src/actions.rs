@@ -1,6 +1,7 @@
 #[cfg(all(target_os = "macos", target_arch = "aarch64"))]
 use crate::apple_intelligence;
 use crate::audio_feedback::{play_feedback_sound, play_feedback_sound_blocking, SoundType};
+use crate::managers::ai_enhancement::AiEnhancementManager;
 use crate::managers::audio::AudioRecordingManager;
 use crate::managers::history::HistoryManager;
 use crate::managers::transcription::TranscriptionManager;
@@ -29,6 +30,49 @@ pub trait ShortcutAction: Send + Sync {
 
 // Transcribe Action
 struct TranscribeAction;
+
+async fn maybe_ai_enhance_transcription(
+    app: &AppHandle,
+    transcription: &str,
+) -> Option<String> {
+    let settings = get_settings(app);
+    
+    if !settings.ai_enhancement_enabled {
+        return None;
+    }
+
+    let model = settings.ai_selected_model.clone()?;
+    
+    // Skip very short text
+    if transcription.split_whitespace().count() < 5 {
+        return None;
+    }
+
+    // Get AI manager
+    let ai_manager = app.try_state::<Arc<tokio::sync::Mutex<AiEnhancementManager>>>()?;
+    let mut manager = ai_manager.lock().await;
+
+    // Enhance with timeout
+    match tokio::time::timeout(
+        tokio::time::Duration::from_secs(5),
+        manager.enhance_text(transcription, &model, &settings.ai_features),
+    )
+    .await
+    {
+        Ok(Ok(enhanced)) => {
+            debug!("AI enhancement successful");
+            Some(enhanced)
+        }
+        Ok(Err(e)) => {
+            debug!("AI enhancement failed: {}", e);
+            None
+        }
+        Err(_) => {
+            debug!("AI enhancement timed out");
+            None
+        }
+    }
+}
 
 async fn maybe_post_process_transcription(
     settings: &AppSettings,
@@ -366,16 +410,21 @@ impl ShortcutAction for TranscribeAction {
                             let mut post_processed_text: Option<String> = None;
                             let mut post_process_prompt: Option<String> = None;
 
-                            // First, check if Chinese variant conversion is needed
+                            // Step 1: AI enhancement (if enabled)
+                            if let Some(ai_enhanced) = maybe_ai_enhance_transcription(&ah, &transcription).await {
+                                final_text = ai_enhanced.clone();
+                            }
+
+                            // Step 2: Check if Chinese variant conversion is needed
                             if let Some(converted_text) =
-                                maybe_convert_chinese_variant(&settings, &transcription).await
+                                maybe_convert_chinese_variant(&settings, &final_text).await
                             {
                                 final_text = converted_text.clone();
                                 post_processed_text = Some(converted_text);
                             }
-                            // Then apply regular post-processing if enabled
+                            // Step 3: Apply regular post-processing if enabled
                             else if let Some(processed_text) =
-                                maybe_post_process_transcription(&settings, &transcription).await
+                                maybe_post_process_transcription(&settings, &final_text).await
                             {
                                 final_text = processed_text.clone();
                                 post_processed_text = Some(processed_text);

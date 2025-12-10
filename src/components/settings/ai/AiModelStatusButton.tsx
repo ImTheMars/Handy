@@ -1,0 +1,61 @@
+import React from "react";
+
+type AiModelStatus = "ready" | "pulling" | "error" | "not_installed" | "ollama_unavailable";
+
+interface AiModelStatusButtonProps {
+  status: AiModelStatus;
+  displayText: string;
+  isDropdownOpen: boolean;
+  onClick: () => void;
+}
+
+const AiModelStatusButton: React.FC<AiModelStatusButtonProps> = ({
+  status,
+  displayText,
+  isDropdownOpen,
+  onClick,
+}) => {
+  const getStatusColor = (status: AiModelStatus): string => {
+    switch (status) {
+      case "ready":
+        return "bg-green-400";
+      case "pulling":
+        return "bg-logo-primary animate-pulse";
+      case "error":
+        return "bg-red-400";
+      case "not_installed":
+        return "bg-yellow-400";
+      case "ollama_unavailable":
+        return "bg-red-400";
+      default:
+        return "bg-mid-gray/60";
+    }
+  };
+
+  return (
+    <button
+      onClick={onClick}
+      className="flex items-center gap-2 hover:text-text/80 transition-colors"
+      title={`AI Model status: ${displayText}`}
+    >
+      <div className={`w-2 h-2 rounded-full ${getStatusColor(status)}`} />
+      <span className="max-w-36 truncate text-sm">{displayText}</span>
+      <svg
+        className={`w-3 h-3 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`}
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M19 9l-7 7-7-7"
+        />
+      </svg>
+    </button>
+  );
+};
+
+export default AiModelStatusButton;
+

@@ -90,6 +90,25 @@ export const AboutSettings: React.FC = () => {
             Thanks to the amazing work by Georgi Gerganov and contributors.
           </div>
         </SettingContainer>
+
+        <SettingContainer
+          title="Ollama"
+          description="Local AI model management for text enhancement"
+          grouped={true}
+          layout="stacked"
+        >
+          <div className="text-sm text-mid-gray">
+            AI text enhancement is powered by{" "}
+            <button
+              onClick={() => openUrl("https://ollama.com")}
+              className="text-logo-primary hover:underline"
+            >
+              Ollama
+            </button>
+            , enabling privacy-preserving local AI processing.
+            All enhancement happens on your device.
+          </div>
+        </SettingContainer>
       </SettingsGroup>
     </div>
   );
