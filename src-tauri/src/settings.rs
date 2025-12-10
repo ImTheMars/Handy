@@ -290,6 +290,10 @@ pub struct AppSettings {
     pub mute_while_recording: bool,
     #[serde(default)]
     pub append_trailing_space: bool,
+    #[serde(default = "default_experiments_enabled")]
+    pub experiments_enabled: bool,
+    #[serde(default = "default_developer_mode")]
+    pub developer_mode: bool,
 }
 
 fn default_model() -> String {
@@ -445,6 +449,17 @@ fn default_post_process_prompts() -> Vec<LLMPrompt> {
     }]
 }
 
+fn default_experiments_enabled() -> bool {
+    false
+}
+
+fn default_developer_mode() -> bool {
+    // Check for HANDY_DEV environment variable
+    std::env::var("HANDY_DEV")
+        .map(|v| v == "1" || v.to_lowercase() == "true")
+        .unwrap_or(false)
+}
+
 fn ensure_post_process_defaults(settings: &mut AppSettings) -> bool {
     let mut changed = false;
     for provider in default_post_process_providers() {
@@ -553,6 +568,8 @@ pub fn get_default_settings() -> AppSettings {
         post_process_selected_prompt_id: None,
         mute_while_recording: false,
         append_trailing_space: false,
+        experiments_enabled: default_experiments_enabled(),
+        developer_mode: default_developer_mode(),
     }
 }
 

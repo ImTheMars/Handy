@@ -5,9 +5,14 @@ import { SettingsGroup } from "../../ui/SettingsGroup";
 import { SettingContainer } from "../../ui/SettingContainer";
 import { Button } from "../../ui/Button";
 import { AppDataDirectory } from "../AppDataDirectory";
+import { ExperimentsToggle } from "../ExperimentsToggle";
+import { ExperimentsSettings } from "../ExperimentsSettings";
+import { useSettings } from "../../../hooks/useSettings";
 
 export const AboutSettings: React.FC = () => {
   const [version, setVersion] = useState("");
+  const { getSetting } = useSettings();
+  const experimentsEnabled = getSetting("experiments_enabled") ?? false;
 
   useEffect(() => {
     const fetchVersion = async () => {
@@ -67,7 +72,11 @@ export const AboutSettings: React.FC = () => {
             Donate
           </Button>
         </SettingContainer>
+
+        <ExperimentsToggle descriptionMode="tooltip" grouped={true} />
       </SettingsGroup>
+
+      {experimentsEnabled && <ExperimentsSettings />}
 
       <SettingsGroup title="Acknowledgments">
         <SettingContainer

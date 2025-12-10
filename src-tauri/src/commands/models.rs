@@ -135,3 +135,26 @@ pub async fn get_recommended_first_model() -> Result<String, String> {
     // Recommend Parakeet V3 model for first-time users - fastest and most accurate
     Ok("parakeet-tdt-0.6b-v3".to_string())
 }
+
+#[tauri::command]
+#[specta::specta]
+pub async fn reset_onboarding(
+    app_handle: AppHandle,
+    model_manager: State<'_, Arc<ModelManager>>,
+) -> Result<(), String> {
+    // Check if developer mode is enabled
+    let settings = get_settings(&app_handle);
+    if !settings.developer_mode {
+        return Err("Developer mode is not enabled".to_string());
+    }
+
+    // Delete all models to force onboarding
+    let models = model_manager.get_available_models();
+    for model in models {
+        if let Err(e) = model_manager.delete_model(&model.id) {
+            log::warn!("Failed to delete model {}: {}", model.id, e);
+        }
+    }
+
+    Ok(())
+}
